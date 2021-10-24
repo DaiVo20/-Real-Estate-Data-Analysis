@@ -1,8 +1,10 @@
 import scrapy
 
 
-# Các thuộc tính cần thu thập của Căn hộ/Chung cư
 class RealEstateItem(scrapy.Item):
+    """
+    Các thuộc tính cần thu thập
+    """
     # Loại hình bất động sản
     type_real_estate = scrapy.Field()
     # Mã căn/ Mã căn hộ

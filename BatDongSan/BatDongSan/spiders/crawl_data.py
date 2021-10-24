@@ -6,17 +6,18 @@ import json
 
 
 # cd BatDongSan\data
-# scrapy crawl crawl-data -o dataset.csv
+# scrapy crawl real-state -o dataset.csv
 
 class RealEstateChoTotSpider(Spider):
-    name = "crawl-data"
+    name = "real-state"
     allowed_domains = ["nha.chotot.com", "gateway.chotot.com"]
     start_urls = ["https://nha.chotot.com"]
     base_url = "https://nha.chotot.com/{}/{}?page={}"
     api = 'https://gateway.chotot.com/v1/public/ad-listing/{}'
     current_type_name = None
 
-    '''
+    def parse(self, response):
+        '''
     - Phương thức này sẽ lấy dữ liệu 10 trang của từng địa điểm tương ứng với từng loại bất động sản
         locations: Một dict lưu trữ các địa điểm cần crawl (3 địa điểm)
         type_real_estates: Loại bất động sản (3 loại bất động sản)
@@ -25,9 +26,9 @@ class RealEstateChoTotSpider(Spider):
       chúng ta sẽ có thể dùng để lấy được các thông tin chi tiết của sản phẩm thông qua việc gọi api.
     - Mỗi sản phẩm trên từng trang sẽ được gọi api lấy thông tin chi tiết và chuyển đến phương thức parse_item
       để merge dữ liệu và dataframe
-    '''
-    def parse(self, response):
-        locations = {"tp-ho-chi-minh": "TP Hồ Chí Minh", "binh-duong": "Bình Dương", "dong-nai": "Đồng Nai"}
+        '''
+        locations = {"tp-ho-chi-minh": "TP Hồ Chí Minh",
+                     "binh-duong": "Bình Dương", "dong-nai": "Đồng Nai"}
         type_real_estates = {"mua-ban-can-ho-chung-cu": "Căn hộ/Chung cư", "mua-ban-nha-dat": "Nhà ở",
                              "mua-ban-dat": "Đất"}
 
@@ -39,7 +40,8 @@ class RealEstateChoTotSpider(Spider):
                 total_page = 10
                 page = 1
                 while True:
-                    items = response.xpath('//div//li//a[@class="AdItem_adItem__2O28x"]')
+                    items = response.xpath(
+                        '//div//li//a[@class="AdItem_adItem__2O28x"]')
                     for item in items:
                         href = item.attrib.get('href')
                         id_extract = re.findall(r'(\d+).htm', href)
@@ -52,7 +54,8 @@ class RealEstateChoTotSpider(Spider):
                     yield scrapy.Request(self.base_url.format(location, type_real_estate, page),
                                          callback=self.parse)
 
-    '''
+    def parse_item(self, response):
+        '''
     - Phương thức này nhận json từ api đã request trước đó và map vào item
         response:   là phản hồi sau khi request từ api
         attribute_map:  là các thuộc tính sẽ được map từ json vào item
@@ -62,8 +65,7 @@ class RealEstateChoTotSpider(Spider):
         id: tương ứng với tên thuộc tính trong attribute_map
         value: tương ứng với giá trị các thuộc tính đó
     - Giá trị trả về là item - sẽ được merge vào dataframe sau khi kết thúc quá trình crawl
-    '''
-    def parse_item(self, response):
+        '''
         item = RealEstateItem()
         attribute_map = ['unitnumber', 'ward', 'area', 'region', 'address', 'property_status',
                          'price_m2', 'direction', 'balconydirection', 'property_legal_document',
