@@ -1,16 +1,11 @@
-### Set up
-Create virtual environment
-1. $ sudo apt install python3.9-venv
-2. $ python3 -m venv venv
-3. $ source venv/bin/activate
-
 ### Create Scrapy empty project
-1. $ sudo apt install python3-scrapy
-2. $ scrapy startproject tutorial
+1. $ pip install scrapy
+2. $ scrapy startproject [project_name]
 
-### Starting crwal
+### Starting crawl
 To crawl data from website run:
-1. $ scrapy crawl <name>
+1. $ cd [project_name]
+2. $ scrapy crawl [spider_name]
 
 To save data run:
-1. scrapy crawl <name> -o <filename>.csv
+1. scrapy crawl [spider_name] -o [filename].csv
