@@ -26,12 +26,23 @@ class DataPreProcessor():
 
             Returns
             ----------
-                - number (int): Số nguyên đầu tiên trong chuỗi x
+                - number (float): Số nguyên đầu tiên trong chuỗi x
         '''
         x = x.lower()
-        number = int(re.findall(r'\d+', x)[0])
+        # Tách các số có trong chuỗi
+        # Số thực sẽ bị tách thành list do có chứa dấu phẩy(,) hoặc chấm(.)
+        ele = re.findall(r'\d+', x)
+        if len(ele) == 1:
+            number = int(ele[0])
+        elif len(ele) > 1:
+            # Tổng hợp số về dạng số thực
+            number = sum([int(v)/(10**i) for i, v in enumerate(ele)])
+        else:
+            number = np.nan
+
         if 'nhiều hơn' in x:
-            return str(number) + '+'
+            return f'{number}+'
+
         return number
 
     def split_number(self, *features):
