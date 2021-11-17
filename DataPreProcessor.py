@@ -1,6 +1,7 @@
 import re
 import numpy as np
 import pandas as pd
+import regex
 from datetime import datetime
 
 
@@ -31,12 +32,10 @@ class DataPreProcessor():
         x = x.lower()
         # Tách các số có trong chuỗi
         # Số thực sẽ bị tách thành list do có chứa dấu phẩy(,) hoặc chấm(.)
-        ele = re.findall(r'\d+', x)
-        if len(ele) == 1:
-            number = int(ele[0])
-        elif len(ele) > 1:
-            # Tổng hợp số về dạng số thực
-            number = sum([int(v)/(10**i) for i, v in enumerate(ele)])
+        ele = re.findall(r'\d+[\.,]\d+', x)
+        if len(ele) > 0:
+            number = [float(_.replace(',', '.')) for _ in ele]
+
         else:
             number = np.nan
 
@@ -103,13 +102,39 @@ class DataPreProcessor():
                 - unit_uniques (list): Danh dách các đơn vị có trong thuộc tính
         '''
         unit_uniques = []
-        for value in self.data[feature].unique():
-            if value is np.nan or isinstance(value, int) or isinstance(value, float):
+        # for value in self.data[feature].unique():
+        #     if value is np.nan or isinstance(value, int) or isinstance(value, float):
+        #         continue
+        #     spl = value.split(' ')
+        #     if spl[1] not in unit_uniques:
+        #         unit_uniques.append(spl[1])
+        for value in self.data.loc[:, feature]:
+            try:
+                units = regex.findall(r'(?i)\p{L}+\b', value)
+                if len(units) > 1:
+                    if units not in unit_uniques:
+                        unit_uniques.append(units)
+                else:
+                    if units[0] not in unit_uniques:
+                        unit_uniques.append(units[0])
+            except:
                 continue
-            spl = value.split(' ')
-            if spl[1] not in unit_uniques:
-                unit_uniques.append(spl[1])
+
         return unit_uniques
+
+    def check_value_unit(self, units, feature):
+        valueOfUnit = {}
+        for idx, val in enumerate(self.data.loc[:, feature]):
+            count = 0
+            try:
+                for _ in units:
+                    if _ in val:
+                        count += 1
+            except:
+                continue
+            if len(units) == count:
+                valueOfUnit[idx] = val
+        return valueOfUnit
 
     def __remove_unit(self, x, uniques, converters):
         '''
