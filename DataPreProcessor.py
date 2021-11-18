@@ -8,14 +8,63 @@ from datetime import datetime
 class DataPreProcessor():
 
     def __init__(self, data):
-        """
-        Contructor tạo tạo đối tượng để tiền xử lý dữ liệu
+        '''
+            Contructor tạo tạo đối tượng để tiền xử lý dữ liệu
 
-        Parameters
-        ----------
-            - data (pd.DataFrame): dữ liệu dạng dataframe trong pandas cần xử lý
-        """
+            Parameters
+            ----------
+                - data (pd.DataFrame): dữ liệu dạng dataframe trong pandas cần xử lý
+        '''
         self.data = data
+
+    def remove_excess_whitespace(self, on_cell=True, on_column_name=False):
+        '''
+            Xóa khoảng trắng dư thừa của tên cột và toàn bộ dữ liệu string trên dataframe
+
+            Parameters
+            ----------
+                - on_cell (bool): Lựa chọn xóa khoảng trắng dư thừa toàn bộ dữ liệu trên dataframe. Giá trị mặc định là True
+                - on_column_name (bool): Lựa chọn xóa khoảng trắng dư thừa trên tên thuộc tính. Giá trị mặc định là False
+        '''
+        if on_cell:
+            for i in self.data.columns:
+                if self.data[i].dtype == int:
+                    continue
+                self.data[i] = [j.strip() for j in self.data[i]]
+
+        if on_column_name:
+            self.data.columns = [i.strip() for i in self.data.columns]
+
+    def replace_value(self, features, value_to_replaces, replace_values):
+        '''
+            Thay thế giá trị của các thuộc tính trong bộ dữ liệu
+            Lưu ý: Độ dài features, value_to_replaces và replace_values phải như nhau
+
+            Parameters
+            ----------
+                - features (list): Danh sách tên các thuộc tính cần thay thế giá trị
+                - value_to_replaces: Danh sách các giá trị cần thay thế tương ứng với các thuộc tính trong danh sách
+                - replace_values: Danh sách các giá trị thay thế bằng các giá trị này tương ứng với các thuộc tính trong danh sách
+                
+        '''
+        if len(features) == len(value_to_replaces) == len(replace_values):
+            for feature, value_to_replace, replace_value in zip(features, value_to_replaces, replace_values):
+                self.data[feature].replace(r'[{}]'.format(value_to_replace), replace_value, inplace=True, regex=True)
+        else:
+            print("ERROR - Length of parameters are not the same")
+    
+    def convert_data_type(self, features, data_types):
+        '''
+            Chuyển đổi kiểu dữ liệu của một hoặc nhiều thuộc tính
+
+            Parameters
+            ----------
+                - feature (string): Danh sách tên các thuộc tính cần chuyển đổi kiểu dữ liệu
+                - data_types: Danh sách các kiểu dữ liệu tương ứng cần chuyển đổi
+                
+        '''
+        for feature, data_type in zip(features, data_types):
+            self.data[feature] = self.data[feature].astype(data_type)
 
     def __get_number_from_string(self, x):
         '''
