@@ -176,12 +176,15 @@ class DataPreProcessor():
         for idx, val in enumerate(self.data.loc[:, feature]):
             count = 0
             try:
-                for _ in units:
-                    if _ in val:
-                        count += 1
+                if type(units) == str and units in val:
+                    valueOfUnit[idx] = val
+                if type(units) != str:
+                    for _ in units:
+                        if _ in val:
+                            count += 1
             except:
                 continue
-            if len(units) == count:
+            if len(units) == count and len(units) > 1:
                 valueOfUnit[idx] = val
         return valueOfUnit
 
