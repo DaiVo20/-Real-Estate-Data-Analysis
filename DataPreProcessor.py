@@ -5,6 +5,48 @@ import regex
 from datetime import datetime
 
 
+def handle_value_with_unit(values):
+    '''
+    Xử lý dữ liệu chứa đơn vị đo nhằm tách dữ liệu dạng số
+    
+    Parameters
+    ----------
+        - values (dict): các giá trị đã được gom nhóm cùng đơn vị đo
+
+    Return
+    ----------
+        untreated_val, handle_val
+
+    Trả về giá trị chưa được xử lý do vấn đề kí tự và một dict đã được xử lý đơn vị đo
+    '''
+    untreated_val = {}
+    handle_val = {}
+    for unit, val_unit in values.items():
+        value = {}
+        value_spec_val = {}
+        for i, val in val_unit.items():
+            try:
+                val_no_space = val.replace(' ', '')
+                # _ = re.findall(r'[0-9]+(,[0-9]+)+', val_no_space)
+                _ = re.findall(r'[0-9\.,]+', val_no_space)
+                if len(_) == 0:
+                    # print(i, unit[i], _)
+                    value[i] = np.nan
+                else:
+                    _ = [float(k.replace(',', '.'))
+                         for k in _ if bool(re.search(r'\d', k))]
+                    if len(_) == 1:
+                        _ = _[0]
+                    value[i] = _
+            except:
+                value_spec_val[i] = val
+            handle_val[unit] = value
+        if len(value_spec_val) > 0:
+            untreated_val[unit] = value_spec_val
+
+    return untreated_val, handle_val
+
+
 class DataPreProcessor():
 
     def __init__(self, data):
@@ -49,10 +91,11 @@ class DataPreProcessor():
         '''
         if len(features) == len(value_to_replaces) == len(replace_values):
             for feature, value_to_replace, replace_value in zip(features, value_to_replaces, replace_values):
-                self.data[feature].replace(r'[{}]'.format(value_to_replace), replace_value, inplace=True, regex=True)
+                self.data[feature].replace(r'[{}]'.format(
+                    value_to_replace), replace_value, inplace=True, regex=True)
         else:
             print("ERROR - Length of parameters are not the same")
-    
+
     def convert_data_type(self, features, data_types):
         '''
             Chuyển đổi kiểu dữ liệu của một hoặc nhiều thuộc tính
@@ -171,12 +214,55 @@ class DataPreProcessor():
 
         return unit_uniques
 
+    # @staticmethod
+    # def handle_value_with_unit(values):
+    #     '''
+    #     Xử lý dữ liệu chứa đơn vị đo nhằm tách dữ liệu dạng số
+    #     '''
+    #     unhandle_val = {}
+    #     handle_val = {}
+    #     for unit, val_unit in values.items():
+    #         value = {}
+    #         value_spec_val = {}
+    #         for i, val in val_unit.items():
+    #             try:
+    #                 val_no_space = val.replace(' ', '')
+    #                 _ = re.findall(r'[0-9\.,]+', val_no_space)
+    #                 if len(_) == 0:
+    #                     # print(i, unit[i], _)
+    #                     value[i] = np.nan
+    #                 else:
+    #                     _ = [float(k.replace(',', '.'))
+    #                          for k in _ if bool(re.search(r'\d', k))]
+    #                 if len(_) == 1:
+    #                     _ = _[0]
+    #                     value[i] = _
+    #             except:
+    #                 value_spec_val[i] = val
+    #         handle_val[unit] = value
+    #         if len(value_spec_val) > 0:
+    #             unhandle_val[unit] = value_spec_val
+    #     return unhandle_val, handle_val
+
     def check_value_unit(self, units, feature):
+        '''
+        Kiểm tra các giá trị có cùng đơn vị đo trong thuộc tính
+
+        Parameters
+        ----------
+            - units: đơn vị đo của giá trị
+            - feature: thuộc tính cần xử lý
+
+        Returns
+        ----------
+            Các giá trị có cùng đơn vị đơn vị đo
+        '''
         valueOfUnit = {}
         for idx, val in enumerate(self.data.loc[:, feature]):
             count = 0
             try:
-                if type(units) == str and units in val:
+                # if type(units) == str and units in val:
+                if type(units) == str and bool(re.search(f'(?i){units}$', val)):
                     valueOfUnit[idx] = val
                 if type(units) != str:
                     for _ in units:
