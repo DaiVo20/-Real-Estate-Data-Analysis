@@ -102,8 +102,8 @@ class DataPreProcessor():
 
             Parameters
             ----------
-                - feature (string): Danh sách tên các thuộc tính cần chuyển đổi kiểu dữ liệu
-                - data_types: Danh sách các kiểu dữ liệu tương ứng cần chuyển đổi
+                - feature (list): Danh sách tên các thuộc tính cần chuyển đổi kiểu dữ liệu
+                - data_types (list): Danh sách các kiểu dữ liệu tương ứng cần chuyển đổi
                 
         '''
         for feature, data_type in zip(features, data_types):
@@ -121,20 +121,58 @@ class DataPreProcessor():
             ----------
                 - number (float): Số nguyên đầu tiên trong chuỗi x
         '''
-        x = x.lower()
-        # Tách các số có trong chuỗi
-        # Số thực sẽ bị tách thành list do có chứa dấu phẩy(,) hoặc chấm(.)
-        ele = re.findall(r'\d+[\.,]\d+', x)
-        if len(ele) > 0:
-            number = [float(_.replace(',', '.')) for _ in ele]
+        # if data_source == 'alonhadat':
+        #     x = x.lower()
+        #     # Tách các số có trong chuỗi
+        #     # Số thực sẽ bị tách thành list do có chứa dấu phẩy(,) hoặc chấm(.)
+        #     ele = re.findall(r'\d+[\.,]\d+', x)
+        #     if len(ele) > 0:
+        #         number = [float(_.replace(',', '.')) for _ in ele]
 
-        else:
-            number = np.nan
+        #     else:
+        #         number = np.nan
+
+        #     if 'nhiều hơn' in x:
+        #         return f'Nhiều hơn {number}'
+
+        #     return number
+        # elif data_source == 'chotot':
+        if isinstance(x, (float, int)):
+            return x
+
+        x = x.lower()
+        number = int(re.findall(r'\d+', x)[0])
 
         if 'nhiều hơn' in x:
-            return f'{number}+'
+            return f'Nhiều hơn {number}'
+        
 
         return number
+
+        # else:
+        #     print("ERROR")
+    
+    def replace_value_more_milestone(self, feature, milestone):
+        '''
+            Thay thế giá trị thành nhiều hơn nếu lớn hơn mốc giá trị được thiết lập
+
+            Parameters
+            ----------
+                - features (string): Tên thuộc tính cần thay đổi giá trị
+                - milestone (int): mốc giá trị để thay thế
+        '''
+
+        def replace(x):
+            if isinstance(x, str) or x is np.nan:
+                return x
+
+            if isinstance(x, (int, float)) and x <= milestone:
+                return int(x)
+            
+            return f'Nhiều hơn {milestone}'
+
+
+        self.data[feature] = self.data[feature].apply(lambda x: replace(x))
 
     def split_number(self, *features):
         '''
@@ -157,6 +195,24 @@ class DataPreProcessor():
                 - features (list): Danh sách các thuộc tính cần drop
         '''
         self.data.drop(features, axis=1, inplace=True)
+
+    # def drop_error_row(self, feature, max):
+    #     '''
+    #         Xóa các dòng chữa dữ liệu bị lỗi của thuộc tính
+    #         Dữ liệu lỗi là dữ liệu có giá trị lớn hơn giá trị cho phép
+
+    #         Parameters
+    #         ----------
+    #             - feature (string): Tên thuộc tính
+    #             - max (int hoặc float): Giá trị lớn nhất có thể của thuộc tính đó
+    #     '''
+    #     def check_condition(value):
+    #         if isinstance(value, str) or (isinstance(value, (int, float)) and value <= max):
+    #             return True  
+
+    #         return False
+
+    #     self.data[feature] = filter(check_condition, self.data[feature])
 
     def drop_row_nan(self, subset):
         '''
@@ -181,7 +237,7 @@ class DataPreProcessor():
             x/1000) for x in self.data[feature]]
         self.data[feature] = self.data[feature].dt.strftime(format)
 
-    def check_unique_unit(self, feature):
+    def check_unique_unit(self, feature, data_source):
         '''
             Kiểm tra giá các đơn vị của một thuộc tính trong dữ diệu 
 
@@ -194,23 +250,27 @@ class DataPreProcessor():
                 - unit_uniques (list): Danh dách các đơn vị có trong thuộc tính
         '''
         unit_uniques = []
-        # for value in self.data[feature].unique():
-        #     if value is np.nan or isinstance(value, int) or isinstance(value, float):
-        #         continue
-        #     spl = value.split(' ')
-        #     if spl[1] not in unit_uniques:
-        #         unit_uniques.append(spl[1])
-        for value in self.data.loc[:, feature]:
-            try:
-                units = regex.findall(r'(?i)\p{L}+\b', value)
-                if len(units) > 1:
-                    if units not in unit_uniques:
-                        unit_uniques.append(units)
-                else:
-                    if units[0] not in unit_uniques:
-                        unit_uniques.append(units[0])
-            except:
-                continue
+        if data_source == 'chotot':
+            for value in self.data[feature].unique():
+                if value is np.nan or isinstance(value, int) or isinstance(value, float):
+                    continue
+                spl = value.split(' ')
+                if spl[1] not in unit_uniques:
+                    unit_uniques.append(spl[1])
+        elif data_source == 'alonhadat':
+            for value in self.data.loc[:, feature]:
+                try:
+                    units = regex.findall(r'(?i)\p{L}+\b', value)
+                    if len(units) > 1:
+                        if units not in unit_uniques:
+                            unit_uniques.append(units)
+                    else:
+                        if units[0] not in unit_uniques:
+                            unit_uniques.append(units[0])
+                except:
+                    continue
+        else:
+            print('ERROR - Cant support this data source')
 
         return unit_uniques
 
