@@ -4,6 +4,26 @@ import pandas as pd
 import regex
 from datetime import datetime
 
+def convertNum2Int(x):
+    """
+        Chuyển đổi các số từ dạng float string về dạng integer
+
+    Parameters
+    ----------
+        x: dữ liệu cần chuyển đổi
+
+    Return
+    ----------
+        Số đã được chuyển đổi về kiểu integer
+    """
+    if type(x) == str:
+        if x.isdigit():
+            x = int(x)
+    else:
+        if not np.isnan(x):
+            x = int(x)
+    return x
+
 
 def handle_value_with_unit(values):
     '''
@@ -107,7 +127,7 @@ class DataPreProcessor():
                 
         '''
         for feature, data_type in zip(features, data_types):
-            self.data[feature] = self.data[feature].astype(data_type)
+            self.data[feature] = self.data[feature].astype(data_type, errors='ignore')
 
     def __get_number_from_string(self, x):
         '''
