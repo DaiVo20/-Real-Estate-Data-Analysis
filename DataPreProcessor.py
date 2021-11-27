@@ -6,16 +6,17 @@ from datetime import datetime
 
 def convertNum2Int(x):
     """
-        Chuyển đổi các số từ dạng float string về dạng integer
+        Chuyển đổi các số từ dạng string về dạng integer
 
     Parameters
     ----------
-        x: dữ liệu cần chuyển đổi
+        x (string): dữ liệu cần chuyển đổi
 
     Return
     ----------
         Số đã được chuyển đổi về kiểu integer
     """
+
     if type(x) == str:
         if x.isdigit():
             x = int(x)
@@ -88,14 +89,19 @@ class DataPreProcessor():
                 - on_cell (bool): Lựa chọn xóa khoảng trắng dư thừa toàn bộ dữ liệu trên dataframe. Giá trị mặc định là True
                 - on_column_name (bool): Lựa chọn xóa khoảng trắng dư thừa trên tên thuộc tính. Giá trị mặc định là False
         '''
+
+        def strip(x):
+            if isinstance(x, str):
+                return x.strip()
+            return x
+
         if on_cell:
             for i in self.data.columns:
-                if self.data[i].dtype == int:
-                    continue
-                self.data[i] = [j.strip() for j in self.data[i]]
+                self.data[i] = self.data[i].apply(lambda x: strip(x)) 
+                # self.data[i] = [j.strip() for j in self.data[i]]
 
         if on_column_name:
-            self.data.columns = [i.strip() for i in self.data.columns]
+            self.data.columns = [strip(i) for i in self.data.columns]
 
     def replace_value(self, features, value_to_replaces, replace_values):
         '''
@@ -116,6 +122,69 @@ class DataPreProcessor():
         else:
             print("ERROR - Length of parameters are not the same")
 
+
+    def process_feature_unit_alonhadat(self, *features):
+        '''
+            Xử lý các thuộc tính có chứa đơn vị
+            Lưu ý: Phương thức này hoạt động trên bộ dữ liệu alonhadat
+
+            Parameters
+            ----------
+                - feature (list): Danh sách tên các thuộc tính cần xử lý
+        '''
+        for feature in features:
+            # Kiểm tra đơn vị của thuộc tính
+            feature_unit = self.check_unique_unit(feature, data_source='alonhadat')
+
+            # Gom nhóm các giá trị có cùng đơn vị
+            feature_val = {}
+            for i in feature_unit:
+                value = self.check_value_unit(i, feature)
+                feature_val[str(i)] = value
+
+            # Xử lý các giá trị có cùng đơn vị
+            untreated_feature, handle_feature = handle_value_with_unit(feature_val)
+            
+            # Xử lý riêng trên từng thuộc tính
+            if features == 'width':
+                # Chuyển giá trị 1O => 10
+                fill10m = {475: 10.0, 79654: 10.0}
+                handle_feature[feature_unit[1]].update(fill10m)
+
+                # Biến đổi 4l,2m thành 4.2 ở dòng index 115916
+                handle_feature[str(['l', 'm'])][115916] = sum(
+                handle_feature[str(['l', 'm'])][115916])
+
+                # Biến đổi các sô liệu chưa được xử lý về dạng chuẩn
+                for i, val in untreated_feature['m'].items():
+                    number = re.findall(r'[0-9]', val)
+                    count = 0
+                    temp = 0
+                    for num in number:
+                        temp += int(num)/(10**count)
+                        count += 1
+
+                untreated_feature['m'][i] = round(temp, 5)
+
+                # update các số liệu đã qua xử lý
+                handle_feature['m'].update(untreated_feature['m'])
+
+
+            # Cập nhật giá trị vào dataframe
+            for unit in feature_unit:
+                for i, val in handle_feature[str(unit)].items():
+                    if type(val) == list:
+                        print(i, val,end="")
+                        val = round(np.mean(val),5)
+                        print(f" => {val}")
+                    self.data.at[i, feature] = val
+            
+            # self.replace_value(features=[features], value_to_replaces=['-'], replace_values=[np.nan])
+            self.data[feature] = self.data[feature].astype('float')
+
+            self.data[features] = self.data[feature].apply(lambda x: round(x, 1) if type(x) == list else x)
+
+
     def convert_data_type(self, features, data_types):
         '''
             Chuyển đổi kiểu dữ liệu của một hoặc nhiều thuộc tính
@@ -129,6 +198,66 @@ class DataPreProcessor():
         for feature, data_type in zip(features, data_types):
             self.data[feature] = self.data[feature].astype(data_type, errors='ignore')
 
+    def __convert_string_to_int(self, x):
+            """
+                Chuyển đổi các số từ dạng string về dạng integer
+
+            Parameters
+            ----------
+                x (string): dữ liệu cần chuyển đổi
+
+            Return
+            ----------
+                Số đã được chuyển đổi về kiểu integer
+            """
+            if x is np.nan:
+                return np.nan
+            
+            x = int(x)
+            return x
+
+            # if type(x) == str:
+            #     if x.isdigit():
+            #         x = int(x)
+            # else:
+            #     if not np.isnan(x):
+            #         x = int(x)
+            # return x
+
+    def convert_to_int(self, feature):
+        """
+            Chuyển đổi các giá trị trong thuộc tính từ dạng string về dạng integer
+
+            Parameters
+            ----------
+                feature (string): Tên thuộc tính cần chuyển đổi
+
+        """
+        self.data[feature] = self.data[feature].apply(self.__convert_string_to_int)
+    
+    def replace_value_more_milestone(self, feature, milestone):
+        '''
+            Thay thế giá trị thành nhiều hơn nếu lớn hơn mốc giá trị được thiết lập
+
+            Parameters
+            ----------
+                - features (string): Tên thuộc tính cần thay đổi giá trị
+                - milestone (int): mốc giá trị để thay thế
+        '''
+
+        def replace(x):
+            if isinstance(x, str) or x is np.nan:
+                return x
+
+            if isinstance(x, (int, float)) and x <= milestone:
+                return int(x)
+            
+            return f'Nhiều hơn {milestone}'
+
+
+        self.data[feature] = self.data[feature].apply(lambda x: replace(x))
+
+    
     def __get_number_from_string(self, x):
         '''
             Tìm và trả về giá trị số nguyên đầu tiên trong chuổi bằng Regular Expression
@@ -171,28 +300,6 @@ class DataPreProcessor():
 
         # else:
         #     print("ERROR")
-    
-    def replace_value_more_milestone(self, feature, milestone):
-        '''
-            Thay thế giá trị thành nhiều hơn nếu lớn hơn mốc giá trị được thiết lập
-
-            Parameters
-            ----------
-                - features (string): Tên thuộc tính cần thay đổi giá trị
-                - milestone (int): mốc giá trị để thay thế
-        '''
-
-        def replace(x):
-            if isinstance(x, str) or x is np.nan:
-                return x
-
-            if isinstance(x, (int, float)) and x <= milestone:
-                return int(x)
-            
-            return f'Nhiều hơn {milestone}'
-
-
-        self.data[feature] = self.data[feature].apply(lambda x: replace(x))
 
     def split_number(self, *features):
         '''
