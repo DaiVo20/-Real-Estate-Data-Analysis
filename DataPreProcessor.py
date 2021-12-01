@@ -2,7 +2,10 @@ import re
 import numpy as np
 import pandas as pd
 import regex
+import matplotlib.pyplot as plt
+import seaborn as sns
 from datetime import datetime
+
 
 def convertNum2Int(x):
     """
@@ -96,7 +99,7 @@ class DataPreProcessor():
 
         if on_cell:
             for i in self.data.columns:
-                self.data[i] = self.data[i].apply(lambda x: strip(x)) 
+                self.data[i] = self.data[i].apply(lambda x: strip(x))
                 # self.data[i] = [j.strip() for j in self.data[i]]
 
         if on_column_name:
@@ -132,7 +135,8 @@ class DataPreProcessor():
                 
         '''
         for feature, data_type in zip(features, data_types):
-            self.data[feature] = self.data[feature].astype(data_type, errors='ignore')
+            self.data[feature] = self.data[feature].astype(
+                data_type, errors='ignore')
 
     def __get_number_from_string(self, x):
         '''
@@ -170,13 +174,12 @@ class DataPreProcessor():
 
         if 'nhiều hơn' in x:
             return f'Nhiều hơn {number}'
-        
 
         return number
 
         # else:
         #     print("ERROR")
-    
+
     def replace_value_more_milestone(self, feature, milestone):
         '''
             Thay thế giá trị thành nhiều hơn nếu lớn hơn mốc giá trị được thiết lập
@@ -193,9 +196,8 @@ class DataPreProcessor():
 
             if isinstance(x, (int, float)) and x <= milestone:
                 return int(x)
-            
-            return f'Nhiều hơn {milestone}'
 
+            return f'Nhiều hơn {milestone}'
 
         self.data[feature] = self.data[feature].apply(lambda x: replace(x))
 
@@ -233,7 +235,7 @@ class DataPreProcessor():
     #     '''
     #     def check_condition(value):
     #         if isinstance(value, str) or (isinstance(value, (int, float)) and value <= max):
-    #             return True  
+    #             return True
 
     #         return False
 
@@ -447,6 +449,28 @@ class DataPreProcessor():
             values.append(x)
 
         self.data[name_feature] = values
+
+    def cal_ratio_missing_data(self, feature):
+        """
+        Tính tỉ lệ missing của thuộc tính
+
+        Parameters
+        ----------
+            feature: Thuộc tính cần tính tỉ lệ missing
+
+        Return
+        ----------
+            Dataframes
+        """
+        missing_values = self.data[feature].isna(
+        ).sum() / len(self.data[feature])
+        missing_values = missing_values.to_frame()
+        missing_values.columns = ['ratio']
+        missing_values.index.names = ['feature']
+        missing_values['feature'] = missing_values.index
+        missing_values = missing_values.sort_values(by=['ratio'])
+
+        return missing_values
 
     def save_as_csv(self, file_name):
         '''
