@@ -101,7 +101,8 @@ def predict():
     df['year'] = int(year)
     df['month'] = int(month)
 
-    price_predict = np.round(model.predict(df)[0][0], 2)
+    predict = np.array(model.predict(df)).flatten()
+    price_predict = np.round(predict[0], 2)
     return render_template('index.html', price=price_predict,
                             type_real_estate=o_type_real_estate,
                             region =  o_region,
