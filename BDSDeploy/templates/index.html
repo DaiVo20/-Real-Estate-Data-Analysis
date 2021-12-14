@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link
-            href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
-            rel="stylesheet"
-        />
-        <title>Real Estate Price Predictor</title>
-    </head>
-    <body
-        class="
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
+    <title>Real Estate Price Predictor</title>
+</head>
+
+<body class="
             flex flex-col
             justify-between
             item-center
@@ -22,214 +20,153 @@
             to-blue-500
             text-gray-800
             md:flex-row
-        "
-    >   
-        <main class="bg-white p-16 flex-auto md:mt-0 md:ml-8 rounded-lg">
-            <h1 class="text-3xl font-bold mb-8">
-                Dự báo giá Bất Động Sản:
-            </h1>
+        ">
+    <main class="bg-white p-16 flex-auto md:mt-0 md:ml-8 rounded-lg">
+        <h1 class="text-3xl font-bold mb-8">
+            Dự báo giá Bất Động Sản:
+        </h1>
 
-            <form
-                action="/predict"
-                method="post"
-                class="flex flex-col"
-            >
-                <!-- Categorical Feature -->
-                <script>
-                    function populate(s1,feature){
-                        var s1 = document.getElementById(s1);
-                        var s2 = document.getElementById(feature);
-                        s2.innerHTML = "";
-                        if (feature == 'area') {
-                            if(s1.value == "Đồng Nai"){
-                                var optionArray = ["Thành phố Biên Hòa", "Huyện Nhơn Trạch", "Huyện Long Thành", "Huyện Vĩnh Cửu", "Huyện Trảng Bom",
-                                                "Thành phố Long Khánh", "Huyện Thống Nhất", "Huyện Định Quán", "Huyện Xuân Lộc", "Huyện Cẩm Mỹ", "Huyện Tân Phú"];
-                            } else if(s1.value == "Bình Dương"){
-                                var optionArray = ['Thành phố Thuận An', 'Thành phố Dĩ An', 'Thị xã Tân Uyên', 'Thành phố Thủ Dầu Một', 'Thị xã Bến Cát', 'Huyện Bàu Bàng', 'Huyện Phú Giáo', 'Huyện Dầu Tiếng', 'Huyện Bắc Tân Uyên'];
-                            } else if(s1.value == "Hồ Chí Minh"){
-                                var optionArray = ['Quận 9', 'Quận Bình Tân', 'Thành phố Thủ Đức', 'Quận Bình Thạnh', 'Quận 12', 'Quận Tân Phú', 'Quận 7', 'Huyện Nhà Bè', 'Quận Phú Nhuận', 'Quận 8', 'Quận 2', 'Quận Tân Bình', 'Quận 6', 'Quận 10',
-                                                'Quận 3', 'Quận Gò Vấp', 'Huyện Bình Chánh', 'Quận 4', 'Quận 5', 'Quận 1', 'Huyện Hóc Môn', 'Quận 11', 'Huyện Củ Chi', 'Huyện Cần Giờ'];
-                            }
+        <form action="/predict" method="post" class="flex flex-col">
+            <!-- Categorical Feature -->
+            <script>
+                function populate(s1, feature) {
+                    var s1 = document.getElementById(s1);
+                    var s2 = document.getElementById(feature);
+                    s2.innerHTML = "";
+                    if (feature == 'area') {
+                        if (s1.value == "Đồng Nai") {
+                            var optionArray = ["Thành phố Biên Hòa", "Huyện Nhơn Trạch", "Huyện Long Thành", "Huyện Vĩnh Cửu", "Huyện Trảng Bom",
+                                "Thành phố Long Khánh", "Huyện Thống Nhất", "Huyện Định Quán", "Huyện Xuân Lộc", "Huyện Cẩm Mỹ", "Huyện Tân Phú"];
+                        } else if (s1.value == "Bình Dương") {
+                            var optionArray = ['Thành phố Thuận An', 'Thành phố Dĩ An', 'Thị xã Tân Uyên', 'Thành phố Thủ Dầu Một', 'Thị xã Bến Cát', 'Huyện Bàu Bàng', 'Huyện Phú Giáo', 'Huyện Dầu Tiếng', 'Huyện Bắc Tân Uyên'];
+                        } else if (s1.value == "Hồ Chí Minh") {
+                            var optionArray = ['Quận 9', 'Quận Bình Tân', 'Thành phố Thủ Đức', 'Quận Bình Thạnh', 'Quận 12', 'Quận Tân Phú', 'Quận 7', 'Huyện Nhà Bè', 'Quận Phú Nhuận', 'Quận 8', 'Quận 2', 'Quận Tân Bình', 'Quận 6', 'Quận 10',
+                                'Quận 3', 'Quận Gò Vấp', 'Huyện Bình Chánh', 'Quận 4', 'Quận 5', 'Quận 1', 'Huyện Hóc Môn', 'Quận 11', 'Huyện Củ Chi', 'Huyện Cần Giờ'];
                         }
-                        if (feature == 'rooms' || feature == 'floors') {
-                            if(s1.value == "Căn hộ/Chung cư"){
-                                if (feature == 'floors'){
-                                    var optionArray = ['0', '1', '2']
-                                }
-                                else {
-                                    var optionArray = ['0', '1', '2', '3', '4', '5'];
-                                }
-                            } else if(s1.value == "Nhà ở"){
-                                var optionArray = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Nhiều hơn 10'];
-                            } else if(s1.value == "Đất"){
-                                var optionArray = ['0'];
-                            } else if(s1.value == "Khác"){
-                                var optionArray = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Nhiều hơn 10'];
+                    }
+                    if (feature == 'rooms' || feature == 'floors') {
+                        if (s1.value == "Căn hộ/Chung cư") {
+                            if (feature == 'floors') {
+                                var optionArray = ['0', '1', '2']
                             }
-                        }
-
-                        if (feature == 'toilets') {
-                            if(s1.value == "Căn hộ/Chung cư"){
+                            else {
                                 var optionArray = ['0', '1', '2', '3', '4', '5'];
-                            } else if(s1.value == "Nhà ở"){
-                                var optionArray = ['0', '1', '2', '3', '4', '5', '6', 'Nhiều hơn 6'];
-                            } else if(s1.value == "Đất"){
-                                var optionArray = ['0'];
-                            } else if(s1.value == "Khác"){
-                                var optionArray = ['0', '1', '2', '3', '4', '5', '6', 'Nhiều hơn 6'];
                             }
-                        }
-
-                        for(var option in optionArray){
-                            var pair = optionArray[option]
-                            var newOption = document.createElement("option");
-                            newOption.value = pair;
-                            newOption.innerHTML = pair;
-                            s2.options.add(newOption);
+                        } else if (s1.value == "Nhà ở") {
+                            var optionArray = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Nhiều hơn 10'];
+                        } else if (s1.value == "Đất") {
+                            var optionArray = ['0'];
+                        } else if (s1.value == "Khác") {
+                            var optionArray = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Nhiều hơn 10'];
                         }
                     }
 
-                </script>
+                    if (feature == 'toilets') {
+                        if (s1.value == "Căn hộ/Chung cư") {
+                            var optionArray = ['0', '1', '2', '3', '4', '5'];
+                        } else if (s1.value == "Nhà ở") {
+                            var optionArray = ['0', '1', '2', '3', '4', '5', '6', 'Nhiều hơn 6'];
+                        } else if (s1.value == "Đất") {
+                            var optionArray = ['0'];
+                        } else if (s1.value == "Khác") {
+                            var optionArray = ['0', '1', '2', '3', '4', '5', '6', 'Nhiều hơn 6'];
+                        }
+                    }
 
-                <label for="type_real_estate"  class="mt-4 mb-2">
-                    Loại hình bất động sản :
-                </label>
-                <select
-                    name="type_real_estate"
-                    id="type_real_estate"
-                    class="p-4 bg-gray-100 rounded-md"
-                    onchange="populate(this.id,'floors'); populate(this.id,'rooms'),populate(this.id,'toilets')"
-                    
-                >
-                    <option value=""></option>
-                    <option value="Căn hộ/Chung cư">Căn hộ/Chung cư</option>
-                    <option value="Nhà ở">Nhà ở</option>
-                    <option value="Đất">Đất</option>
-                    <option value="Khác">Khác</option>
-                </select>
-                
+                    for (var option in optionArray) {
+                        var pair = optionArray[option]
+                        var newOption = document.createElement("option");
+                        newOption.value = pair;
+                        newOption.innerHTML = pair;
+                        s2.options.add(newOption);
+                    }
+                }
 
-                <label for="region" class="mt-4 mb-2">Tỉnh, Thành phố  :</label>
-                <select
-                    name="region"
-                    id="region"
-                    class="p-4 bg-gray-100 rounded-md"
-                    onchange="populate(this.id,'area')"
-                >
-                    <option value=""></option>
-                    <option value="Đồng Nai">Đồng Nai</option>
-                    <option value="Bình Dương">Bình Dương</option>
-                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
-                </select>
+            </script>
+
+            <label for="type_real_estate" class="mt-4 mb-2">
+                Loại hình bất động sản :
+            </label>
+            <select name="type_real_estate" id="type_real_estate" class="p-4 bg-gray-100 rounded-md"
+                onchange="populate(this.id,'floors'); populate(this.id,'rooms'),populate(this.id,'toilets')">
+                <option value=""></option>
+                <option value="Căn hộ/Chung cư">Căn hộ/Chung cư</option>
+                <option value="Nhà ở">Nhà ở</option>
+                <option value="Đất">Đất</option>
+                <option value="Khác">Khác</option>
+            </select>
 
 
-                <label for="area" class="mt-4 mb-2">Quận, Huyện :</label>
-                <select
-                    name="area"
-                    id="area"
-                    class="p-4 bg-gray-100 rounded-md"
-                >
-                </select>
+            <label for="region" class="mt-4 mb-2">Tỉnh, Thành phố :</label>
+            <select name="region" id="region" class="p-4 bg-gray-100 rounded-md" onchange="populate(this.id,'area')">
+                <option value=""></option>
+                <option value="Đồng Nai">Đồng Nai</option>
+                <option value="Bình Dương">Bình Dương</option>
+                <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+            </select>
 
-                <label for="property_legal_document" class="mt-4 mb-2">Giấy tờ pháp lý :</label>
-                <select
-                    name="property_legal_document"
-                    id="property_legal_document"
-                    class="p-4 bg-gray-100 rounded-md"
-                >
-                    <option value="Đang chờ sổ">Đang chờ sổ</option>
-                    <option value="Đã có sổ">Đã có sổ</option>
-                    <option value="Giấy tờ khác">Giấy tờ khác</option>
-                </select>
 
-                <label for="rooms" class="mt-4 mb-2">Số phòng ngủ :</label>
-                <select
-                    name="rooms"
-                    id="rooms"
-                    class="p-4 bg-gray-100 rounded-md"
-                >
-                </select>
+            <label for="area" class="mt-4 mb-2">Quận, Huyện :</label>
+            <select name="area" id="area" class="p-4 bg-gray-100 rounded-md">
+            </select>
 
-                <label for="toilets" class="mt-4 mb-2">Số phòng vệ sinh :</label>
-                <select
-                    name="toilets"
-                    id="toilets"
-                    class="p-4 bg-gray-100 rounded-md"
-                >
-                </select>
+            <label for="property_legal_document" class="mt-4 mb-2">Giấy tờ pháp lý :</label>
+            <select name="property_legal_document" id="property_legal_document" class="p-4 bg-gray-100 rounded-md">
+                <option value="Đang chờ sổ">Đang chờ sổ</option>
+                <option value="Đã có sổ">Đã có sổ</option>
+                <option value="Giấy tờ khác">Giấy tờ khác</option>
+            </select>
 
-                <label for="floors" class="mt-4 mb-2">Số tầng :</label>
-                <select
-                    name="floors"
-                    id="floors"
-                    class="p-4 bg-gray-100 rounded-md"
-                >
-                </select>
+            <label for="rooms" class="mt-4 mb-2">Số phòng ngủ :</label>
+            <select name="rooms" id="rooms" class="p-4 bg-gray-100 rounded-md">
+            </select>
 
-                <label for="year" class="mt-4 mb-2">Năm:</label>
-                <select
-                    name="year"
-                    id="year"
-                    class="p-4 bg-gray-100 rounded-md"
-                >
-                    <option value="2020">2020</option>
-                    <option value="2021">2021</option>
-                    <option value="2022">2022</option>
-                </select>
+            <label for="toilets" class="mt-4 mb-2">Số phòng vệ sinh :</label>
+            <select name="toilets" id="toilets" class="p-4 bg-gray-100 rounded-md">
+            </select>
 
-                <label for="month" class="mt-4 mb-2">Tháng:</label>
-                <select
-                    name="month"
-                    id="month"
-                    class="p-4 bg-gray-100 rounded-md"
-                >
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
-                    <option value="11">11</option>
-                    <option value="12">12</option>
-                </select>
+            <label for="floors" class="mt-4 mb-2">Số tầng :</label>
+            <select name="floors" id="floors" class="p-4 bg-gray-100 rounded-md">
+            </select>
+
+            <label for="year" class="mt-4 mb-2">Năm:</label>
+            <select name="year" id="year" class="p-4 bg-gray-100 rounded-md">
+                <option value="2020">2020</option>
+                <option value="2021">2021</option>
+                <option value="2022">2022</option>
+            </select>
+
+            <label for="month" class="mt-4 mb-2">Tháng:</label>
+            <select name="month" id="month" class="p-4 bg-gray-100 rounded-md">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+            </select>
             <!-- Numerical Feature -->
 
-                <label for="width" class="mb-2">Chiều rộng : </label>
-                <input
-                    type="text"
-                    name="width"
-                    placeholder="width"
-                    required="required"
-                    class="p-4 bg-gray-100 rounded-md"
-                />
+            <label for="width" class="mb-2">Chiều rộng : </label>
+            <input type="text" name="width" placeholder="width" required="required"
+                class="p-4 bg-gray-100 rounded-md" />
 
-                <label for="size" class="mb-2">Diện tích :</label>
-                <input
-                    type="text"
-                    name="size"
-                    placeholder="size"
-                    required="required"
-                    class="p-4 bg-gray-100 rounded-md"
-                />
+            <label for="size" class="mb-2">Diện tích :</label>
+            <input type="text" name="size" placeholder="size" required="required" class="p-4 bg-gray-100 rounded-md" />
 
-                <label for="front_road" class="mb-2">Chiều rộng mặt đường :</label>
-                <input
-                    type="text"
-                    name="front_road"
-                    placeholder="front_road"
-                    required="required"
-                    class="p-4 bg-gray-100 rounded-md"
-                />
+            <label for="front_road" class="mb-2">Chiều rộng mặt đường :</label>
+            <input type="text" name="front_road" placeholder="front_road" required="required"
+                class="p-4 bg-gray-100 rounded-md" />
 
-                <!-- end -->
+            <!-- end -->
 
-                <button
-                    type="submit"
-                    class="
+            <button type="submit" class="
                         flex
                         justify-center
                         align-center
@@ -240,64 +177,53 @@
                         to-blue-500
                         text-white
                         rounded-md
-                    "
-                >
-                    predict
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="feather feather-arrow-right ml-4"
-                    >
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </button>
+                    ">
+                predict
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="feather feather-arrow-right ml-4">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+            </button>
 
-                
-                <!-- end -->
-            </form>
-        </main>
 
-        
-        <section class="mt-8 flex-auto rounded-lg md:mt-0 md:ml-8">
-            
-            <div class="bg-white p-16 rounded-lg">
-                <h1 class="text-2xl mb-8">
-                    Bất Động Sản bạn quan tâm có giá dự kiến là :
-                </h1>
-                <h2 class="text-5xl font-bold">{{ price }} tỷ VND</h2>
-                {% if (price) != 0 %}
-                <div class="mt-8">
-                    <p>Loại hình bất động sản : {{ type_real_estate }}</p>
-                    <p>Tỉnh, Thành phố  : {{ region }}</p>
-                    <p> Quận, Huyện : {{ area }}</p>
-                    <p>Năm: {{ year }}</p>
-                    <p>Tháng: {{ month }}</p>
-                    <p>Giấy tờ pháp lý : {{ property_legal_document }}</p>
-                    <p>Số phòng ngủ : {{ rooms }}</p>
-                    <p>Số phòng vệ sinh : {{ toilets }}</p>
-                    <p>Số tầng : {{ floors }}</p>
-                    <p>Chiều rộng: {{ width }}</p>
-                    <p>Diện tích : {{ size }}</p>
-                    <p>Chiều rộng mặt đường: {{ front_road }}</p>
+            <!-- end -->
+        </form>
+    </main>
 
-                </div>
-                {% endif %}
+
+    <section class="mt-8 flex-auto rounded-lg md:mt-0 md:ml-8">
+
+        <div class="bg-white p-16 rounded-lg">
+            <h1 class="text-2xl mb-8">
+                Bất Động Sản bạn quan tâm có giá dự kiến là :
+            </h1>
+            <h2 class="text-5xl font-bold">{{ price }} tỷ VND</h2>
+            {% if (price) != 0 %}
+            <div class="mt-8">
+                <p>Loại hình bất động sản : {{ type_real_estate }}</p>
+                <p>Tỉnh, Thành phố : {{ region }}</p>
+                <p> Quận, Huyện : {{ area }}</p>
+                <p>Thời gian: {{ month }}/{{ year }}</p>
+                <!-- <p>Năm: {{ year }}</p>
+                <p>Tháng: {{ month }}</p> -->
+                <p>Giấy tờ pháp lý : {{ property_legal_document }}</p>
+                <p>Số phòng ngủ : {{ rooms }}</p>
+                <p>Số phòng vệ sinh : {{ toilets }}</p>
+                <p>Số tầng : {{ floors }}</p>
+                <p>Chiều rộng: {{ width }}</p>
+                <p>Diện tích : {{ size }}</p>
+                <p>Chiều rộng mặt đường: {{ front_road }}</p>
+
             </div>
-            <div class="flex justify-around bg-white p-16 rounded-lg mt-8">
-                <img
-                    class="h-24 md:h-28"
-                    src="https://upload.wikimedia.org/wikipedia/commons/3/38/Logo_UIT_updated.jpg"
-                    alt="logo-dts"
-                />
-            </div>
-        </section>
-    </body>
+            {% endif %}
+        </div>
+        <div class="flex justify-around bg-white p-16 rounded-lg mt-8">
+            <img class="h-24 md:h-28" src="https://upload.wikimedia.org/wikipedia/commons/3/38/Logo_UIT_updated.jpg"
+                alt="logo-dts" />
+        </div>
+    </section>
+</body>
+
 </html>
